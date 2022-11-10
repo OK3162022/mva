@@ -4,7 +4,7 @@ class PCA():
         pass
 
 
-
+#Factor analysis
 class PCF():
     def __init__(self):
         pass 
