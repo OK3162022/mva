@@ -11,7 +11,7 @@ def distance(data, MU):
     Sinv = np.linalg.inv(S) #inverse of S
     Xbar = np.mean(X, axis = 0).reshape(2,1)    #Mean vector
 
-    d2 = np.matmul(np.matmul((Xbar - MU).T, Sinv), (Xbar - MU))  #contour
+    d2 = np.matmul(np.matmul((Xbar - MU).T, Sinv), (Xbar - MU))  #Mahalanobis distance squared
     
     return d2
 
