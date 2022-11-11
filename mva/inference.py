@@ -77,7 +77,7 @@ def one_sample_chi2test(data, MU):
     return chi2_calc, pval
         
 
-def hotteling2sample_paired_test(data1, data2):
+def hotteling2sample_paired_test(data1, data2): 
     """
     Compares mean vectors of two dependent samples
     
@@ -110,7 +110,7 @@ def hotteling2sample_ind_ttest(data1, data2, equal_var = True):
     return None
     
 
-def spherecity_test(data):
+def spherecity_test(data): ##### The butcher was here 
     """
     performs Maucly's sphercity test.
     Checks if variables are independent and have the same variance
