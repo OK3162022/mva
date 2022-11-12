@@ -1,3 +1,4 @@
+
 from scipy.stats.distributions import chi2
 from scipy.stats.distributions import f
 import numpy as np
@@ -124,8 +125,28 @@ def spherecity_test(data): ##### The butcher was here
     ------
     pvalue, test-statistic
     """
-    #function
-    return None
+    if np.linalg.det(S) != 0 :
+        n = data.shape[0]   #number of samples
+        p = data.shape[1]   #number of variables
+        X= np.asmatrix(data)    # convert data to matrix
+        S = np.cov(X, rowvar=False)     # variance covariance matrix
+        lamda = ((np.linalg.det(S) )/(np.trace(S)/p)**p)**(n/2)  # Spherecity test statistic
+        calc_stat= -2*np.log(lamda)     # multiply by -2ln to follow Chi-square distribution
+        df= (((p*(p+1))/2) -1 )     # degrees of freedom 
+        pval = chi2.sf(calc_stat, df)   # P-value
+    else :
+        raise ValueError(f'determinant of variance covariance atrix = 0 / variables maybe perfectly correlated')
+    return calc_stat , pval
+
+def s_pooled(data1, data2):
+    n1= len(data1)
+    n2= len(data2)
+    X1 = np.asmatrix(data1)                                   # convert first sample to matrix
+    S1 = np.cov(X1, rowvar=False)                             # variance covariance matrix of the first sample
+    X2 = np.asmatrix(data2)                                   # convert second sample to matrix
+    S2 = np.cov(X2, rowvar=False) 
+    S_pooled= ((n1-1)/(n1+n2-2))*S1 +((n2-1)/(n1+n2-2))*S2 
+    return  S_pooled, S1 , S2
 
 
 def boxm_test(data1, data2):
@@ -140,5 +161,15 @@ def boxm_test(data1, data2):
     returns
     -------
     pvalue, test statistic """
+    S_pooled , S1 , S2 = s_pooled(data1, data2)
+    n1= len(data1)
+    n2= len(data2)
+    num = (np.linalg.det(S1))**((n1-1)/2)*(np.linalg.det(S2))**((n2-1)/2) 
+    dem= (np.linalg.det(S_pooled))**((n1+n2-2)/2)
+    m= (num/dem)
+
+
+
+
     #function
     return None
