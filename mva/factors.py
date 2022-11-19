@@ -63,7 +63,7 @@ class PCF():
 
     def _unique_factors(self):
         pass
-
+######
     def fit_transform(self, eigenvals, eigenvectors, n_factors):
         
         #self.factors = _estimate_factors()
