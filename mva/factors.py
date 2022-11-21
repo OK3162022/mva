@@ -7,10 +7,11 @@ def _eigen_decompostion(X, cor = True):
     lambda: eigenvalues in descending oreder
     Q: is normalized eigenvectors
     """
-    if cor == True:
-        R = X.corr()
-        lmbda, Q = np.linalg.eigh(R)
+    X = np.asmatrix(X)
 
+    if cor == True:
+        R = np.corrcoef(X, rowvar=False)
+        lmbda, Q = np.linalg.eigh(R)
         return lmbda, Q
 
     else:
@@ -55,7 +56,7 @@ class PCA():
         if n_components > X.shape[1]:
             raise ValueError(f'factors must be less than or equal number of variables')
 
-        C = np.matmul(X, self.eigenvectors[:,:n_components])
+        C = np.matmul(X, self.eigenvectors[:,- n_components :])
         return C
 
 
@@ -88,11 +89,11 @@ class PCF():
         pass
 
 
-    def estimate_factors(self, eigenvals, eigenvectors, n_factors):
+    def estimate_factors(self, X, n_factors):
         if n_factors > self.X.shape[1]:
             raise ValueError(f'factors must be less or equal number of variables')
 
-        factors = PCA.fit_transform(n_factors) / np.sqrt(self.eigenvals)        
+        factors = PCA.fit_transform(self, X, n_factors) / np.sqrt(self.eigenvals[:n_factors])        
         self.factors = factors        
         return self.factors
 
