@@ -3,22 +3,26 @@ import pandas as pd
 
 def _eigen_decompostion(X, cor = True):
     """
-    ..math:: A = Q.lambda.Q^-1
-    lambda: eigenvalues in descending oreder
-    Q: is normalized eigenvectors
+    ..math:: A = P.lambda.P^-1 or P.lambda.P.T
+    lambda: eigenvalues in descending order
+    P: is normalized eigenvectors
     """
     X = np.asmatrix(X)
 
     if cor == True:
         R = np.corrcoef(X, rowvar=False)
-        lmbda, Q = np.linalg.eigh(R)
-        return lmbda, Q
+        lmbda, P = np.linalg.eigh(R)
+        lmbda = lmbda[::-1]
+        P = np.flip(P, axis = 1)
+        return lmbda, P
 
     else:
         try:
             S = np.cov(X, rowvar=False)
-            lmbda, Q = np.linalg.eigh(S)
-            return lmbda, Q
+            lmbda, P = np.linalg.eigh(S)
+            lmbda = lmbda[::-1]
+            P = np.flip(P, axis = 1)
+            return lmbda, P
 
         except:
             raise ValueError(f'data matrix must be all numeric')
@@ -51,12 +55,12 @@ class PCA():
 
         Return
         ------
-        C: principal components dataframe 
+        C: principal components 
         """
         if n_components > X.shape[1]:
             raise ValueError(f'factors must be less than or equal number of variables')
 
-        C = np.matmul(X, self.eigenvectors[:,- n_components :])
+        C = np.matmul(X, self.eigenvectors[:, :n_components])
         return C
 
 
