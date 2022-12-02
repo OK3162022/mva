@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 def _eigen_decompostion(X, cor = True):
     """
@@ -37,12 +38,39 @@ class PCA():
         self.eigenvals, self.eigenvectors = _eigen_decompostion(X, self.cor)
         pass
 
-    def summary(self):
+    def summary(lamda):
         """eigenvalues table with % variance explained"""
-        pass
+        pc_list = []
+        for i in range(len(lamda)):                    ##indexing each principle component
+            pc_list.append("PC"+str(i+1))
 
-    def scree_plot(self):
-        pass
+        for i in lamda:                              #proportion of variance explained by each principle component
+            prop_ex= i/sum(lamda)
+
+        data= {'Principle components':pc_list,
+            'Eigen values': lamda,
+            'Proportion': prop_ex
+            }   
+        df= pd.DataFrame(data)
+        df['Cumulative'] = df['proportion'].cumsum() ##cumulative proportion of variance explained
+
+
+        return 
+
+    def scree_plot(lamda,n_components):
+        
+        for i in lamda:                              #proportion of variance explained by each principle component
+            var_explained = i/sum(lamda)
+
+        pcs=np.arrange(n_components)
+
+        plt.plot(pcs, var_explained, 'o-', linewidth=2, color='blue')
+        plt.title('Scree Plot')
+        plt.xlabel('Principal Component')
+        plt.ylabel('Variance Explained')
+        plt.show()
+
+        return
 
     def fit_transform(self, X, n_components):
         """
