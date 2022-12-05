@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+
 
 def _eigen_decompostion(X, cor = True):
     """
@@ -28,6 +30,23 @@ def _eigen_decompostion(X, cor = True):
         except:
             raise ValueError(f'data matrix must be all numeric')
 
+def standardize(X):
+    """
+    standardizes variables
+    
+    Parameters
+    ----------
+    X: data matrix to standardize
+    
+    return
+    ------
+    Z: standardized data matrix
+    """
+    X = np.asmatrix(X)
+
+    return (X - np.mean(X, axis = 0))/np.var(X, axis = 0)
+
+
 #Principal components analysis
 class PCA():
 
@@ -38,39 +57,57 @@ class PCA():
         self.eigenvals, self.eigenvectors = _eigen_decompostion(X, self.cor)
         pass
 
-    def summary(lamda):
-        """eigenvalues table with % variance explained"""
+    def summary(self):
+        """
+        eigenvalues table with % variance explained
+        """
+        
         pc_list = []
-        for i in range(len(lamda)):                    ##indexing each principle component
+        for i in range(len(self.eigenvals)):                    ##indexing each principle component
             pc_list.append("PC"+str(i+1))
+        
 
-        for i in lamda:                              #proportion of variance explained by each principle component
-            prop_ex= i/sum(lamda)
+        self.explained_ratio = self._variance_explained_ratio(self.eigenvals)
 
         data= {'Principle components':pc_list,
-            'Eigen values': lamda,
-            'Proportion': prop_ex
+            'Eigenvalues': self.eigenvals,
+            'Proportion': self.explained_ratio
             }   
         df= pd.DataFrame(data)
-        df['Cumulative'] = df['proportion'].cumsum() ##cumulative proportion of variance explained
+        df['Cumulative'] = df['Proportion'].cumsum()    #cumulative proportion of variance explained
 
+        return df
 
-        return 
-
-    def scree_plot(lamda,n_components):
+    def _variance_explained_ratio(self, lmbda):
+        """
+        proportion of variance explained by each principle component
         
-        for i in lamda:                              #proportion of variance explained by each principle component
-            var_explained = i/sum(lamda)
+        parameters
+        ---------
+        lmbda: list of eigenvalues
 
-        pcs=np.arrange(n_components)
-
-        plt.plot(pcs, var_explained, 'o-', linewidth=2, color='blue')
+        returns
+        -------
+        list of proportions of variance explained by each eigenvalue
+        """
+        explained_ratio=[]
+        for l in lmbda:                              
+            explained_ratio.append(l/np.sum(lmbda))
+        
+        return explained_ratio
+    
+    def scree_plot(self):
+        """
+        plots scree plot of the eigenvalues
+        dotted horizontal line indicates Kaiser-Gutmann rule. Select eigenvalues greater than 1
+        """
+        plt.plot(self.summary()['Principle components'], self.eigenvals, 'o-')
         plt.title('Scree Plot')
-        plt.xlabel('Principal Component')
-        plt.ylabel('Variance Explained')
+        plt.xlabel('Components')
+        plt.ylabel('Eigenvalues')
+        plt.axhline(1, linestyle = 'dotted')
         plt.show()
 
-        return
 
     def fit_transform(self, X, n_components):
         """
@@ -88,8 +125,16 @@ class PCA():
         if n_components > X.shape[1]:
             raise ValueError(f'factors must be less than or equal number of variables')
 
-        C = np.matmul(X, self.eigenvectors[:, :n_components])
+        if self.cor == True:
+
+            Z = standardize(X)
+            C = np.matmul(Z, self.eigenvectors[:, :n_components])
+
+        else:
+
+            C = np.matmul(X, self.eigenvectors[:, :n_components])
         return C
+
 
 
 
@@ -98,18 +143,30 @@ class PCA():
 #################
 class PCF():
 
-    def __init__(self, cor = True):
+    def __init__(self, n_factors, cor = True):
+        """
+        n_factors: desired number of factors.choose factors based on a previous hypothesis or using
+        scree plot and Kaiser-Guttman rule in Principal component analysis
+        
+        cor: whether to use correlaion matrix or variance covariance-matrix
+        """
+        
+        self.n_factors = n_factors
         self.cor = cor
 
+
+
     def fit(self, X):
-        self.X = X
         self.eigenvals, self.eigenvectors = _eigen_decompostion(X, self.cor)
-        self.loadings =  self._estimate_loadings(self.eigenvals, self.eigenvectors)
+        self.loadings =  self._estimate_loadings(self.eigenvals[:self.n_factors], self.eigenvectors[:, :self.n_factors])
+    
+        self.communalities = np.sum(np.power(self.loadings, 2), axis = 1)
         return self
 
     def _estimate_loadings(self, eigenvals, eigenvectors):
-        L = eigenvectors * np.sqrt(eigenvals)
+        L = np.sqrt(eigenvals) * eigenvectors 
         return L
+    
 
     def summary(self):
         """
@@ -118,15 +175,25 @@ class PCF():
         pass
 
     def _unique_factors(self):
+        # 1 - communalities 
         pass
 
 
-    def estimate_factors(self, X, n_factors):
-        if n_factors > self.X.shape[1]:
-            raise ValueError(f'factors must be less or equal number of variables')
-
-        factors = PCA.fit_transform(self, X, n_factors) / np.sqrt(self.eigenvals[:n_factors])        
-        self.factors = factors        
+    def factor_scores(self, X):
+        """
+        Obtains factor scores for the data.
+        
+        Parameters
+        ---------
+        X: data matrix
+        
+        return
+        ------
+        factors: Factor scores
+        """
+        
+        self.factors = PCA.fit_transform(self, X, self.n_factors) / np.sqrt(self.eigenvals[:self.n_factors])        
+               
         return self.factors
 
     def rotate_factors(self):
