@@ -1,4 +1,4 @@
-import numpy as np
+    import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
@@ -168,11 +168,41 @@ class PCF():
         return L
     
 
-    def summary(self):
+    def summary(Data,L):
         """
         loadings table
         """
-        pass
+        fl_list = []
+        for i in range(len(self.eigenvals)):                    ##indexing each principle component
+            fl_list.append("Factor"+str(i+1))
+        
+        self.explained_ratio = self._variance_explained_ratio(self.eigenvals)
+
+        data= {'Factors':fl_list,
+            'Eigenvalues': self.eigenvals,
+            'Proportion': self.explained_ratio
+            }   
+        df= pd.DataFrame(data)
+        df['Cumulative'] = df['Proportion'].cumsum()    #cumulative proportion of variance explained
+
+        ## Patern Matrix (Loadings)
+        variable_list=Data.iloc[0]  
+        table= {'variables':variable_list}
+        p_matrix=pd.DataFrame(table)
+        table2=pd.DataFrame()
+        factors_l= []
+        for f in range (len(self.n_factors)):
+            factors_l.append("Factor"+str(f+1))
+
+        table2.loc['0'] = factors_l
+        table2.concat(L)
+        table.concat(table2, axis= 1)
+        uniqness= self.communalities
+        table['Uniqness'] = uniqness
+
+       
+        return df , table
+
 
     def _unique_factors(self):
         # 1 - communalities 
