@@ -1,4 +1,4 @@
-    import numpy as np
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
@@ -30,6 +30,24 @@ def _eigen_decompostion(X, cor = True):
         except:
             raise ValueError(f'data matrix must be all numeric')
 
+def _variance_explained_ratio(lmbda):
+        """
+        proportion of variance explained by each principle component
+        
+        parameters
+        ---------
+        lmbda: list of eigenvalues
+
+        returns
+        -------
+        list of proportions of variance explained by each eigenvalue
+        """
+        explained_ratio=[]
+        for l in lmbda:                              
+            explained_ratio.append(l/np.sum(lmbda))
+        
+        return explained_ratio
+
 def standardize(X):
     """
     standardizes variables
@@ -55,7 +73,7 @@ class PCA():
 
     def fit(self, X):
         self.eigenvals, self.eigenvectors = _eigen_decompostion(X, self.cor)
-        pass
+        return self
 
     def summary(self):
         """
@@ -67,7 +85,7 @@ class PCA():
             pc_list.append("PC"+str(i+1))
         
 
-        self.explained_ratio = self._variance_explained_ratio(self.eigenvals)
+        self.explained_ratio = _variance_explained_ratio(self.eigenvals)
 
         data= {'Principle components':pc_list,
             'Eigenvalues': self.eigenvals,
@@ -78,23 +96,6 @@ class PCA():
 
         return df
 
-    def _variance_explained_ratio(self, lmbda):
-        """
-        proportion of variance explained by each principle component
-        
-        parameters
-        ---------
-        lmbda: list of eigenvalues
-
-        returns
-        -------
-        list of proportions of variance explained by each eigenvalue
-        """
-        explained_ratio=[]
-        for l in lmbda:                              
-            explained_ratio.append(l/np.sum(lmbda))
-        
-        return explained_ratio
     
     def scree_plot(self):
         """
@@ -155,61 +156,60 @@ class PCF():
         self.cor = cor
 
 
+    def _estimate_loadings(self, eigenvals, eigenvectors):
+        L = np.sqrt(eigenvals) * eigenvectors 
+        return L
 
     def fit(self, X):
+        self.X = X
         self.eigenvals, self.eigenvectors = _eigen_decompostion(X, self.cor)
         self.loadings =  self._estimate_loadings(self.eigenvals[:self.n_factors], self.eigenvectors[:, :self.n_factors])
     
         self.communalities = np.sum(np.power(self.loadings, 2), axis = 1)
         return self
 
-    def _estimate_loadings(self, eigenvals, eigenvectors):
-        L = np.sqrt(eigenvals) * eigenvectors 
-        return L
+
     
 
-    def summary(Data,L):
-        """
-        loadings table
-        """
-        fl_list = []
-        for i in range(len(self.eigenvals)):                    ##indexing each principle component
-            fl_list.append("Factor"+str(i+1))
-        
-        self.explained_ratio = self._variance_explained_ratio(self.eigenvals)
+    def summary(self):
 
-        data= {'Factors':fl_list,
+        """
+        eigenvalues-loadings table
+        """
+        #Eigenvalues
+        factors_names = []
+        for i in range(len(self.eigenvals)):                   
+            factors_names.append("Factor"+str(i+1))
+        
+        self.explained_ratio = _variance_explained_ratio(self.eigenvals)
+
+        data= {'Factors': factors_names,
             'Eigenvalues': self.eigenvals,
             'Proportion': self.explained_ratio
             }   
         df= pd.DataFrame(data)
-        df['Cumulative'] = df['Proportion'].cumsum()    #cumulative proportion of variance explained
+        df['Cumulative'] = df['Proportion'].cumsum()    
+        
+        ## Pattern Matrix (Loadings)
+        factors_names = []
+        for i in range(self.n_factors):                  
+            factors_names.append("Factor"+str(i+1))
+        pattern_matrix = pd.DataFrame(self.loadings, columns=factors_names)
 
-        ## Patern Matrix (Loadings)
-        variable_list=Data.iloc[0]  
-        table= {'variables':variable_list}
-        p_matrix=pd.DataFrame(table)
-        table2=pd.DataFrame()
-        factors_l= []
-        for f in range (len(self.n_factors)):
-            factors_l.append("Factor"+str(f+1))
-
-        table2.loc['0'] = factors_l
-        table2.concat(L)
-        table.concat(table2, axis= 1)
-        uniqness= self.communalities
-        table['Uniqness'] = uniqness
+        variable_list = self.X.columns  
+        pattern_matrix.set_index(variable_list, inplace=True)       
+        
+        
+        pattern_matrix['Communalities'] = self.communalities     
+        
 
        
-        return df , table
+        return df, pattern_matrix
 
 
-    def _unique_factors(self):
-        # 1 - communalities 
-        pass
+    
 
-
-    def factor_scores(self, X):
+#    def factor_scores(self):
         """
         Obtains factor scores for the data.
         
@@ -222,9 +222,9 @@ class PCF():
         factors: Factor scores
         """
         
-        self.factors = PCA.fit_transform(self, X, self.n_factors) / np.sqrt(self.eigenvals[:self.n_factors])        
+#        self.factors = PCA.fit_transform(self, self.X, self.n_factors) / np.sqrt(self.eigenvals[:self.n_factors])        
                
-        return self.factors
+#        return self.factors
 
     def rotate_factors(self):
         pass
