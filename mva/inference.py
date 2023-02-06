@@ -2,17 +2,26 @@ from scipy.stats.distributions import chi2
 from scipy.stats.distributions import f
 import numpy as np 
 
+def mahalanobis_distance(X, x1, x2):
 
+    X = np.asmatrix(X)
+    S = np.cov(X, rowvar=False)     #Sample variance-covariance matrix
+    Sinv = np.linalg.inv(S) #inverse of S
+    d2 = np.matmul(np.matmul((x1-x2).T, Sinv), (x1-x2))  #Mahalanobis distance
+    return d2
+    
 def distance(data, MU):
-    """..math:: (Xbar-MU).T @ Sinv @ (Xbar-MU)"""
+    """
+    ..math:: (Xbar-MU).T @ Sinv @ (Xbar-MU)
+    data: pandas Dataframe
+    MU: list of means
+    """
 
     X = np.asmatrix(data)
     MU = np.asmatrix(MU).reshape(len(MU), 1)    #convert list to matrix of shape (p x 1)
-    S = np.cov(X, rowvar=False)     #Sample variance-covariance matrix
-    Sinv = np.linalg.inv(S) #inverse of S
     Xbar = np.mean(X, axis = 0).reshape(X.shape[1],1)    #Mean vector
-
-    d2 = np.matmul(np.matmul((Xbar - MU).T, Sinv), (Xbar - MU))  #Mahalanobis distance
+ 
+    d2 = mahalanobis_distance(X=data, x1=Xbar, x2=MU)
     
     return d2
 
@@ -89,7 +98,7 @@ def hotteling2sample_paired_test(data1, data2):
         Dbar = np.asmatrix(np.mean(D, axis = 0)).reshape(p,1)    #Mean difference vector (2x1)
         S = np.cov(D, rowvar=False)
         Sinv = np.linalg.inv(S)
-        T2 = n * np.matmul(np.matmult(Dbar.T, Sinv), Dbar)
+        T2 = n * np.matmul(np.matmul(Dbar.T, Sinv), Dbar)
         f_calc = (n-p)/((n-1)*p) * T2
         df = n - p
         pval = f.sf(f_calc, p, (df))
@@ -158,16 +167,18 @@ def spherecity_test(data):
     ------
     pvalue, test-statistic
     """
+
+    X= np.asmatrix(data)    # convert data to matrix     
+    n = X.shape[0]   #number of samples
+    p = X.shape[1]   #number of variables
+    S = np.cov(X, rowvar=False)     # variance covariance matrix
+
     if np.linalg.det(S) != 0:
-        X= np.asmatrix(data)    # convert data to matrix     
-        n = X.shape[0]   #number of samples
-        p = X.shape[1]   #number of variables
-        S = np.cov(X, rowvar=False)     # variance covariance matrix
         lamda = ((np.linalg.det(S) )/(np.trace(S)/p)**p)**(n/2)  # Spherecity test statistic
         chi2_calc= -2*np.log(lamda)     # multiply by -2ln to follow Chi-square distribution
         df= (((p*(p+1))/2) -1 )     # degrees of freedom 
         pval = chi2.sf(chi2_calc, df)   # P-value   
-         
+    
         return chi2_calc , pval
 
         
