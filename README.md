@@ -18,7 +18,8 @@ Features:
 2. Principle components Analysis
 3. Factor Analysis
 4. K-means 
-5. MANOVA
+5. Multivariate Regression
+6. MANOVA
 
 Installation
 ------------
