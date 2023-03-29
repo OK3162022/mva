@@ -29,10 +29,7 @@ Dependencies
 MVA requires:
 - numpy
 - pandas
--
--
--
--
+- scipy
 ~~~~~~~~~~~~~~~~~
 MVA requires Python 3.8 or newer.
 ~~~~~~~~~~~~~~~~~
@@ -40,12 +37,9 @@ User installation
 ~~~~~~~~~~~~~~~~~
 
 If you already have a working installation of numpy and scipy,
-the easiest way to install scikit-learn is using ``pip``::
+the easiest way to install MVA is using ``pip``::
 
     pip install xxx xxx xxx
 
-or ``conda``::
-
-    conda install -c conda-forge xxx xxx
     
     
